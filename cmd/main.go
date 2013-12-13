@@ -7,6 +7,7 @@ import (
 	"os"
 	"os/exec"
 	"path"
+	"time"
 )
 
 func CommandFn(cmd, logfile string) error {
@@ -49,8 +50,10 @@ func main() {
 			n := name2
 			l := logfile
 			fmt.Println("Starting task : ", n)
+			t1 := time.Now()
 			CommandFn(c, l)
-			fmt.Println("Completed task : ", n)
+			diff := time.Now().Sub(t1)
+			fmt.Printf("Completed task : %s in %s\n", n, diff)
 		}
 
 		runner.Add(name, fn)
