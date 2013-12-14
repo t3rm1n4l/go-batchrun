@@ -7,11 +7,12 @@ import (
 	"os"
 	"os/exec"
 	"path"
+	"strings"
 	"time"
 )
 
-func CommandFn(cmd, logfile string) error {
-	out, err := exec.Command(cmd).CombinedOutput()
+func CommandFn(cmd string, args []string, logfile string) error {
+	out, err := exec.Command(cmd, args...).CombinedOutput()
 	log, _ := os.Create(logfile)
 	log.Write(out)
 	log.Close()
@@ -41,17 +42,20 @@ func main() {
 	runner := batch.New()
 	runner.SetConcurrency(*concurr)
 	for i := 0; i < flag.NArg(); i++ {
-		cmd := flag.Arg(i)
+		cmdargs := strings.Split(flag.Arg(i), " ")
+		cmd := cmdargs[0]
+		args := cmdargs[1:]
 		name := path.Base(cmd)
 		name2 := fmt.Sprintf("%s.%d", name, i)
 		logfile := path.Join(*logdir, fmt.Sprintf("%s.log", name2))
 		fn := func() {
 			c := cmd
+			a := args
 			n := name2
 			l := logfile
 			fmt.Println("Starting task : ", n)
 			t1 := time.Now()
-			CommandFn(c, l)
+			CommandFn(c, a, l)
 			diff := time.Now().Sub(t1)
 			fmt.Printf("Completed task : %s in %s\n", n, diff)
 		}
