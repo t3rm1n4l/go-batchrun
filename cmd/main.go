@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bytes"
 	"flag"
 	"fmt"
 	"github.com/t3rm1n4l/go-batchrun"
@@ -12,9 +13,13 @@ import (
 )
 
 func CommandFn(cmd string, args []string, logfile string) error {
-	out, err := exec.Command(cmd, args...).CombinedOutput()
+	var out bytes.Buffer
+	cmdvar := exec.Command(cmd, args...)
+	cmdvar.Stdout = &out
+	cmdvar.Stderr = &out
+	err := cmdvar.Run()
 	log, _ := os.Create(logfile)
-	log.Write(out)
+	log.Write(out.Bytes())
 	log.Close()
 
 	return err
@@ -55,9 +60,13 @@ func main() {
 			l := logfile
 			fmt.Println("Starting task : ", n)
 			t1 := time.Now()
-			CommandFn(c, a, l)
+			err := CommandFn(c, a, l)
+			status := ""
+			if err != nil {
+				status = fmt.Sprintf("(%v)", err)
+			}
 			diff := time.Now().Sub(t1)
-			fmt.Printf("Completed task : %s in %s\n", n, diff)
+			fmt.Printf("Completed task : %s in %s %s\n", n, diff, status)
 		}
 
 		runner.Add(name, fn)
